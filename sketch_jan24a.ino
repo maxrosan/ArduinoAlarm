@@ -9,6 +9,14 @@ uint8_t lastTimeFed[3] = { 0, 0, 0 };
 uint32_t savedUnixTime = 0;
 uint32_t unixTime = 0;
 
+uint8_t FEEDER_PIN = 7;
+uint8_t PUMP_PIN = 6;
+
+uint16_t alarms = 0;
+
+uint32_t secondsToStoreUnitTime = 3600, lastTimeItStored = 0;
+uint32_t periodToFeed = 1500;
+
 /*
  * 0, 1, 2, 3 -> incrementValue
  * 4, 5, 6 -> Last time it fed
@@ -85,8 +93,12 @@ void setup() {
   Serial.begin(9600);
   rtc.begin();
 
-  pinMode(7, OUTPUT);
-  digitalWrite(7, LOW);
+  pinMode(FEEDER_PIN, OUTPUT);
+  pinMode(PUMP_PIN, OUTPUT);
+
+  digitalWrite(FEEDER_PIN, LOW);
+  digitalWrite(PUMP_PIN, LOW);
+
 
   //zeroEEPROM();
   incrementValue = readEEPROM();
@@ -115,29 +127,26 @@ void setup() {
     Serial.println("Adjusting again");
   }
 
+  lastTimeItStored = now.unixtime();
+
 }
 
-char buf[20];
-
-uint8_t alarms = 0;
-
-uint16_t cycles = 0;
-uint16_t cycleToStoreUnitTime = 3600;
+uint8_t PUMP_STATE = LOW;
+uint8_t FEEDER_STATE = LOW;
 
 void loop() {
   // put your main code here, to run repeatedly:
 
-#define DEFINE_ALARM(HOUR, MINUTE, STATE) \
+#define DEFINE_ALARM(HOUR, MINUTE, PIN, PERIOD, VAR, STATE) \
   if ( now.hour() == HOUR && now.minute() == MINUTE && !( alarms & (1 << STATE) ) ) { \
     lastTimeFed[0] = now.hour(); \
     lastTimeFed[1] = now.minute(); \
     lastTimeFed[2] = now.second(); \
-    alarms = 0; \
-    alarms += 1 << STATE; \
-    Serial.println("Feeding"); \
-    digitalWrite(7, HIGH); \
+    alarms = 1 << STATE; \
+    Serial.println("Alarm!"); \
+    digitalWrite(PIN, HIGH); VAR = HIGH; \
     delay(3000); \
-    digitalWrite(7, LOW); \
+    digitalWrite(PIN, LOW); VAR = LOW; \
     incrementEEPROM(); \
   }
   
@@ -145,14 +154,13 @@ void loop() {
 
   unixTime = now.unixtime();
 
-  if (cycles == 0) {
+  if ((unixTime - lastTimeItStored) > secondsToStoreUnitTime) {
     saveUnixTime();
     Serial.println("Saving UNIX time");
     Serial.println(unixTime);
+    lastTimeItStored = unixTime;
   }  
 
-  cycles = (cycles + 1) % cycleToStoreUnitTime;
-  
   Serial.println(clockAdjusted);
   Serial.print(now.hour());
   Serial.print(":");
@@ -160,7 +168,7 @@ void loop() {
   Serial.print(":");
   Serial.print(now.second());
   Serial.println("----");
-  Serial.print("Fed ");
+  Serial.print("Alarm sounded ");
   Serial.print(incrementValue);
   Serial.println(" times");
   Serial.print("Last time it fed: ");
@@ -172,11 +180,28 @@ void loop() {
   Serial.println();
   Serial.println(unixTime);
 
-  DEFINE_ALARM(7, 00, 0);
-  DEFINE_ALARM(10, 00, 1);
-  DEFINE_ALARM(13, 00, 2);
-  DEFINE_ALARM(15, 33, 3);
-  
+  //DEFINE_ALARM(6, 00,  FEEDER_PIN, periodToFeed);
+  DEFINE_ALARM(8, 19,  FEEDER_PIN, periodToFeed, FEEDER_STATE, 0);
+  DEFINE_ALARM(10, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 1);
+  DEFINE_ALARM(12, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 2);
+  DEFINE_ALARM(14, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 3);
+  DEFINE_ALARM(15, 42, FEEDER_PIN, periodToFeed, FEEDER_STATE, 4);
+
+  if (
+      ( now.hour() >= 7 && now.hour() <= 14 ) ||
+      ( now.hour() >= 19 && now.hour() <= 23 ) ||
+      ( now.hour() >= 0 && now.hour() <= 6 )
+    ) {
+    Serial.println("It should be pumping!");
+    if (PUMP_STATE == LOW) {
+      digitalWrite(PUMP_PIN, HIGH);
+      PUMP_STATE = HIGH;
+    }
+  } else {
+    digitalWrite(PUMP_PIN, LOW);
+    PUMP_STATE = LOW;
+  }
+
 
   delay(1000);
 
