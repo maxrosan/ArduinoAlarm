@@ -181,16 +181,17 @@ void loop() {
   Serial.println(unixTime);
 
   //DEFINE_ALARM(6, 00,  FEEDER_PIN, periodToFeed);
-  DEFINE_ALARM(8, 19,  FEEDER_PIN, periodToFeed, FEEDER_STATE, 0);
+  DEFINE_ALARM(8, 00,  FEEDER_PIN, periodToFeed, FEEDER_STATE, 0);
   DEFINE_ALARM(10, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 1);
   DEFINE_ALARM(12, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 2);
   DEFINE_ALARM(14, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 3);
-  DEFINE_ALARM(15, 42, FEEDER_PIN, periodToFeed, FEEDER_STATE, 4);
+  DEFINE_ALARM(16, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 4);
 
   if (
-      ( now.hour() >= 7 && now.hour() <= 14 ) ||
-      ( now.hour() >= 19 && now.hour() <= 23 ) ||
-      ( now.hour() >= 0 && now.hour() <= 6 )
+      ( now.hour() >= 7 && now.hour() <= 8 ) ||
+      ( now.hour() >= 10 && now.hour() <= 11 ) ||
+      ( now.hour() >= 13 && now.hour() <= 14 ) ||
+      ( now.hour() >= 16 && now.hour() <= 17 )
     ) {
     Serial.println("It should be pumping!");
     if (PUMP_STATE == LOW) {
@@ -198,8 +199,10 @@ void loop() {
       PUMP_STATE = HIGH;
     }
   } else {
-    digitalWrite(PUMP_PIN, LOW);
-    PUMP_STATE = LOW;
+    if (PUMP_STATE == HIGH) {
+      digitalWrite(PUMP_PIN, LOW);
+      PUMP_STATE = LOW;
+    }
   }
 
 
