@@ -188,10 +188,10 @@ void loop() {
   DEFINE_ALARM(16, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 4);
 
   if (
-      ( now.hour() >= 7 && now.hour() <= 8 ) ||
-      ( now.hour() >= 10 && now.hour() <= 11 ) ||
-      ( now.hour() >= 13 && now.hour() <= 14 ) ||
-      ( now.hour() >= 16 && now.hour() <= 17 )
+      ( now.hour() == 7  ) ||
+      ( now.hour() == 10  ) ||
+      ( now.hour() == 13  ) ||
+      ( now.hour() == 16  )
     ) {
     Serial.println("It should be pumping!");
     if (PUMP_STATE == LOW) {
@@ -200,12 +200,13 @@ void loop() {
     }
   } else {
     if (PUMP_STATE == HIGH) {
-      digitalWrite(PUMP_PIN, LOW);
-      PUMP_STATE = LOW;
+     digitalWrite(PUMP_PIN, LOW);
+     PUMP_STATE = LOW;
     }
+    Serial.println("It shouldn't be pumping!");
   }
 
 
-  delay(1000);
+  delay(5000);
 
 }
