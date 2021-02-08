@@ -14,8 +14,11 @@ uint8_t PUMP_PIN = 6;
 
 uint16_t alarms = 0;
 
-uint32_t secondsToStoreUnitTime = 3600, lastTimeItStored = 0;
-uint32_t periodToFeed = 1500;
+uint32_t secondsToStoreUnitTime = 900, lastTimeItStored = 0;
+uint32_t periodToFeed = 2000;
+
+uint8_t hoursToPump[] = { 16, 18, 22, 1, 3, 5, 7, 9, 11, 13 };
+uint8_t hoursToPumpLen;
 
 /*
  * 0, 1, 2, 3 -> incrementValue
@@ -89,6 +92,8 @@ bool clockAdjusted = false;
 void setup() {
   // put your setup code here, to run once:
 
+  hoursToPumpLen = sizeof(hoursToPump);
+
   Wire.begin();
   Serial.begin(9600);
   rtc.begin();
@@ -133,6 +138,8 @@ void setup() {
 
 uint8_t PUMP_STATE = LOW;
 uint8_t FEEDER_STATE = LOW;
+uint8_t i = 0;
+boolean shouldBePumping;
 
 void loop() {
   // put your main code here, to run repeatedly:
@@ -180,18 +187,23 @@ void loop() {
   Serial.println();
   Serial.println(unixTime);
 
-  //DEFINE_ALARM(6, 00,  FEEDER_PIN, periodToFeed);
-  DEFINE_ALARM(8, 00,  FEEDER_PIN, periodToFeed, FEEDER_STATE, 0);
-  DEFINE_ALARM(10, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 1);
-  DEFINE_ALARM(12, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 2);
-  DEFINE_ALARM(14, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 3);
-  DEFINE_ALARM(16, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 4);
+  DEFINE_ALARM(6, 00,  FEEDER_PIN, periodToFeed, FEEDER_STATE, 0);
+  DEFINE_ALARM(8, 00,  FEEDER_PIN, periodToFeed, FEEDER_STATE, 1);
+  DEFINE_ALARM(10, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 2);
+  DEFINE_ALARM(12, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 3);
+  DEFINE_ALARM(14, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 4);
+  DEFINE_ALARM(16, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 5);
+
+  shouldBePumping = false;
+
+  i = 0;
+  while ((i < hoursToPumpLen) && !shouldBePumping) {
+    shouldBePumping = shouldBePumping || ( now.hour() == hoursToPump[i]);
+    i++;
+  }
 
   if (
-      ( now.hour() == 7  ) ||
-      ( now.hour() == 10  ) ||
-      ( now.hour() == 13  ) ||
-      ( now.hour() == 16  )
+      shouldBePumping
     ) {
     Serial.println("It should be pumping!");
     if (PUMP_STATE == LOW) {
