@@ -15,9 +15,9 @@ uint8_t PUMP_PIN = 6;
 uint16_t alarms = 0;
 
 uint32_t secondsToStoreUnitTime = 900, lastTimeItStored = 0;
-uint32_t periodToFeed = 2000;
+uint32_t periodToFeed = 3000;
 
-uint8_t hoursToPump[] = { 16, 18, 22, 1, 3, 5, 7, 9, 11, 13 };
+uint8_t hoursToPump[] = { 7, 10, 13, 16, 19, 22, 2, 5 };
 uint8_t hoursToPumpLen;
 
 /*
@@ -25,6 +25,52 @@ uint8_t hoursToPumpLen;
  * 4, 5, 6 -> Last time it fed
  * 7, 8, 9, 10 -> UNIX time saved
  */
+
+
+// rate = g/s
+inline static uint32_t getSeconds(uint32_t day, uint32_t month, uint32_t rate) {
+  uint32_t result = 0;
+  if (month == 2) {
+    if (day <= 13) {
+      result = 1139;
+    } else if (day <= 20) {
+      result = 1487;
+    } else if (day <= 27) {
+      result = 1901;
+    } else {
+      result = 2380;
+    }
+  } else if (month == 3) {
+    if (day <= 6) {
+      result = 2958;
+    } else if (day <= 13) {
+      result = 3633;
+    } else if (day <= 20) {
+      result = 3853;
+    } else if (day <= 27) {
+      result = 3976;
+    } else {
+      result = 4718;
+    }
+  } else  {
+    if (day <= 3) {
+      result = 5526;
+    } else if(day <= 10) {
+      result = 5355;
+    } else if(day <= 17) {
+      result = 6263;
+    } else if (day <= 24) {
+      result = 7263;
+    } else {
+      result = 8456;
+    }
+  }
+  
+  result = ( result / 6 ) / rate;
+
+  return result;
+  
+}
 
 void saveUnixTime() {
 
@@ -140,26 +186,47 @@ uint8_t PUMP_STATE = LOW;
 uint8_t FEEDER_STATE = LOW;
 uint8_t i = 0;
 boolean shouldBePumping;
+DateTime now;
+
+boolean feederTested = false, feederTest = false;
+
+void testFeeder() {
+  if (!feederTested) {
+    digitalWrite(FEEDER_PIN, HIGH);
+    delay(1000);
+    digitalWrite(FEEDER_PIN, LOW);
+    feederTested = true;
+    Serial.println("TESTED");
+  }
+}
 
 void loop() {
   // put your main code here, to run repeatedly:
 
 #define DEFINE_ALARM(HOUR, MINUTE, PIN, PERIOD, VAR, STATE) \
+  periodToFeed = getSeconds(now.day(), now.month(), 15) * 1000; \
   if ( now.hour() == HOUR && now.minute() == MINUTE && !( alarms & (1 << STATE) ) ) { \
     lastTimeFed[0] = now.hour(); \
     lastTimeFed[1] = now.minute(); \
     lastTimeFed[2] = now.second(); \
     alarms = 1 << STATE; \
     Serial.println("Alarm!"); \
+    Serial.print(periodToFeed); \
+    Serial.println(" sec"); \
     digitalWrite(PIN, HIGH); VAR = HIGH; \
-    delay(3000); \
+    delay(periodToFeed); \
     digitalWrite(PIN, LOW); VAR = LOW; \
     incrementEEPROM(); \
   }
   
-  DateTime now = rtc.now();
+  now = rtc.now();
 
   unixTime = now.unixtime();
+
+  if (feederTest) {
+    testFeeder();
+    return;
+  }
 
   if ((unixTime - lastTimeItStored) > secondsToStoreUnitTime) {
     saveUnixTime();
@@ -169,6 +236,10 @@ void loop() {
   }  
 
   Serial.println(clockAdjusted);
+  Serial.print(now.day());
+  Serial.print("/");
+  Serial.print(now.month());
+  Serial.println("----");  
   Serial.print(now.hour());
   Serial.print(":");
   Serial.print(now.minute());
@@ -191,7 +262,7 @@ void loop() {
   DEFINE_ALARM(8, 00,  FEEDER_PIN, periodToFeed, FEEDER_STATE, 1);
   DEFINE_ALARM(10, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 2);
   DEFINE_ALARM(12, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 3);
-  DEFINE_ALARM(14, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 4);
+  DEFINE_ALARM(14, 11, FEEDER_PIN, periodToFeed, FEEDER_STATE, 4);
   DEFINE_ALARM(16, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 5);
 
   shouldBePumping = false;
