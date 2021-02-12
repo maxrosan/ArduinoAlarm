@@ -32,37 +32,37 @@ inline static uint32_t getSeconds(uint32_t day, uint32_t month, uint32_t rate) {
   uint32_t result = 0;
   if (month == 2) {
     if (day <= 13) {
-      result = 1139;
+      result = 782;
     } else if (day <= 20) {
-      result = 1487;
+      result = 1092;
     } else if (day <= 27) {
-      result = 1901;
+      result = 1139;
     } else {
-      result = 2380;
+      result = 1487;
     }
   } else if (month == 3) {
     if (day <= 6) {
-      result = 2958;
+      result = 1901;
     } else if (day <= 13) {
-      result = 3633;
+      result = 2380;
     } else if (day <= 20) {
-      result = 3853;
+      result = 2958;
     } else if (day <= 27) {
-      result = 3976;
+      result = 3633;
     } else {
-      result = 4718;
+      result = 3853;
     }
   } else  {
     if (day <= 3) {
-      result = 5526;
+      result = 3976;
     } else if(day <= 10) {
-      result = 5355;
+        result = 4718;
     } else if(day <= 17) {
-      result = 6263;
+      result = 5526;
     } else if (day <= 24) {
-      result = 7263;
+      result = 5526;
     } else {
-      result = 8456;
+      result = 6263;
     }
   }
   
