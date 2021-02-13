@@ -29,9 +29,10 @@ uint8_t hoursToPumpLen;
 
 // rate = g/s
 inline static uint32_t getSeconds(uint32_t day, uint32_t month, uint32_t rate) {
+
   uint32_t result = 0;
   if (month == 2) {
-    if (day <= 13) {
+    if (day <= 16) {
       result = 782;
     } else if (day <= 20) {
       result = 1092;
@@ -65,6 +66,8 @@ inline static uint32_t getSeconds(uint32_t day, uint32_t month, uint32_t rate) {
       result = 6263;
     }
   }
+
+  result = result / 2; // adusting
   
   result = ( result / 6 ) / rate;
 
@@ -193,7 +196,7 @@ boolean feederTested = false, feederTest = false;
 void testFeeder() {
   if (!feederTested) {
     digitalWrite(FEEDER_PIN, HIGH);
-    delay(1000);
+    delay(500);
     digitalWrite(FEEDER_PIN, LOW);
     feederTested = true;
     Serial.println("TESTED");
@@ -262,7 +265,7 @@ void loop() {
   DEFINE_ALARM(8, 00,  FEEDER_PIN, periodToFeed, FEEDER_STATE, 1);
   DEFINE_ALARM(10, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 2);
   DEFINE_ALARM(12, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 3);
-  DEFINE_ALARM(14, 11, FEEDER_PIN, periodToFeed, FEEDER_STATE, 4);
+  DEFINE_ALARM(14, 15, FEEDER_PIN, periodToFeed, FEEDER_STATE, 4);
   DEFINE_ALARM(16, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 5);
 
   shouldBePumping = false;
