@@ -26,28 +26,27 @@ uint8_t hoursToPumpLen;
  * 7, 8, 9, 10 -> UNIX time saved
  */
 
-
 // rate = g/s
 inline static uint32_t getSeconds(uint32_t day, uint32_t month, uint32_t rate) {
 
   uint32_t result = 0;
   if (month == 2) {
-    if (day <= 16) {
-      result = 782;
-    } else if (day <= 20) {
-      result = 1092;
+    if (day <= 17) {
+      result = 500; //782;
+    } else if (day <= 25) {
+      result = 700; // 1092;
     } else if (day <= 27) {
-      result = 1139;
+      result = 900 ;// 1139;
     } else {
-      result = 1487;
+      result = 1000; // 1487;
     }
   } else if (month == 3) {
     if (day <= 6) {
-      result = 1901;
+      result = 1300; //; 1901;
     } else if (day <= 13) {
-      result = 2380;
+      result = 1600; // 2380;
     } else if (day <= 20) {
-      result = 2958;
+      result = 2000; // 2958;
     } else if (day <= 27) {
       result = 3633;
     } else {
@@ -67,9 +66,9 @@ inline static uint32_t getSeconds(uint32_t day, uint32_t month, uint32_t rate) {
     }
   }
 
-  result = result / 2; // adusting
+  //result = result / 2; // adusting
   
-  result = ( result / 6 ) / rate;
+  result = ( result / 4 ) / rate;
 
   return result;
   
@@ -196,7 +195,7 @@ boolean feederTested = false, feederTest = false;
 void testFeeder() {
   if (!feederTested) {
     digitalWrite(FEEDER_PIN, HIGH);
-    delay(500);
+    delay(5000);
     digitalWrite(FEEDER_PIN, LOW);
     feederTested = true;
     Serial.println("TESTED");
@@ -261,12 +260,11 @@ void loop() {
   Serial.println();
   Serial.println(unixTime);
 
-  DEFINE_ALARM(6, 00,  FEEDER_PIN, periodToFeed, FEEDER_STATE, 0);
-  DEFINE_ALARM(8, 00,  FEEDER_PIN, periodToFeed, FEEDER_STATE, 1);
-  DEFINE_ALARM(10, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 2);
-  DEFINE_ALARM(12, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 3);
-  DEFINE_ALARM(14, 15, FEEDER_PIN, periodToFeed, FEEDER_STATE, 4);
-  DEFINE_ALARM(16, 00, FEEDER_PIN, periodToFeed, FEEDER_STATE, 5);
+  DEFINE_ALARM( 6, 00,  FEEDER_PIN, periodToFeed, FEEDER_STATE, 0);
+  DEFINE_ALARM( 9, 00,  FEEDER_PIN, periodToFeed, FEEDER_STATE, 1);
+  DEFINE_ALARM(12, 00,  FEEDER_PIN, periodToFeed, FEEDER_STATE, 2);
+  DEFINE_ALARM(15, 00,  FEEDER_PIN, periodToFeed, FEEDER_STATE, 3);
+
 
   shouldBePumping = false;
 
